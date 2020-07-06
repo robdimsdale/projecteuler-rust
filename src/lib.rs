@@ -98,6 +98,10 @@ fn is_palindrome(val: i32) -> bool {
     v1 == v2.chars().rev().collect::<String>()
 }
 
+pub fn p76() -> i32 {
+    p76_cache::new().p76_perms_sum_highest(101, 101) - 1
+}
+
 struct PrimeCache {
     cache: Vec<i64>,
     cache_set: HashSet<i64>,
@@ -144,6 +148,46 @@ impl PrimeCache {
     }
 }
 
+struct p76_cache {
+    cache: HashMap<(i32, i32), i32>,
+}
+
+impl p76_cache {
+    fn new() -> p76_cache {
+        p76_cache {
+            cache: HashMap::new(),
+        }
+    }
+
+    fn p76_perms_sum_highest(&mut self, val: i32, highest: i32) -> i32 {
+        if let Some(found) = self.cache.get(&(val, highest)) {
+            return *found;
+        }
+
+        if highest > val {
+            return self.p76_perms_sum_highest(val, val);
+        }
+
+        if val == 0 || val == 1 {
+            self.cache.insert((val, highest), 1);
+            return 1;
+        }
+
+        if highest == 1 || highest == 0 {
+            self.cache.insert((val, highest), 1);
+            return 1;
+        }
+
+        let mut count = 0;
+        for i in 0..highest {
+            count += self.p76_perms_sum_highest(val - highest + i, highest - i);
+        }
+
+        self.cache.insert((val, highest), count);
+        count
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -180,5 +224,56 @@ mod tests {
     #[test]
     fn test_p7() {
         assert_eq!(p7(), 104743);
+    }
+
+    #[test]
+    fn test_p76() {
+        assert_eq!(p76(), 214481125);
+    }
+
+    #[test]
+    fn test_p76_perms() {
+        let mut c = p76_cache::new();
+
+        assert_eq!(c.p76_perms_sum_highest(0, 0), 1);
+        assert_eq!(c.p76_perms_sum_highest(0, 1), 1);
+
+        assert_eq!(c.p76_perms_sum_highest(1, 0), 1); //
+        assert_eq!(c.p76_perms_sum_highest(1, 1), 1); // 1
+        assert_eq!(c.p76_perms_sum_highest(1, 2), 1); // 1
+
+        assert_eq!(c.p76_perms_sum_highest(2, 0), 1);
+        assert_eq!(c.p76_perms_sum_highest(2, 1), 1); // 1+1
+        assert_eq!(c.p76_perms_sum_highest(2, 2), 2); // 2+0, 1+1
+        assert_eq!(c.p76_perms_sum_highest(2, 3), 2); // 2+0, 1+1
+
+        assert_eq!(c.p76_perms_sum_highest(3, 1), 1); // 1+1+1
+        assert_eq!(c.p76_perms_sum_highest(3, 2), 2); // 2+1, 1+1+1
+        assert_eq!(c.p76_perms_sum_highest(3, 3), 3); // 3+0, 2+1, 1+1+1
+        assert_eq!(c.p76_perms_sum_highest(3, 4), 3); // 3+0, 2+1, 1+1+1
+
+        assert_eq!(c.p76_perms_sum_highest(4, 0), 1);
+        assert_eq!(c.p76_perms_sum_highest(4, 1), 1); // 1+1+1+1
+        assert_eq!(c.p76_perms_sum_highest(4, 2), 3); // 2+2, 2+1+1, 1+1+1+1 => 2 + 4H1 => 2H2 + xH1
+        assert_eq!(c.p76_perms_sum_highest(4, 3), 4); // 3+1, 2+2, 2+1+1, 1+1+1+1 => 1 + 4H2
+        assert_eq!(c.p76_perms_sum_highest(4, 4), 5); // 4+0, 3+1, 2+2, 2+1+1, 1+1+1+1 => 1 + (4H3)
+        assert_eq!(c.p76_perms_sum_highest(4, 5), 5); // 4+0, 3+1, 2+2, 2+1+1, 1+1+1+1 => 4H4
+
+        assert_eq!(c.p76_perms_sum_highest(5, 0), 1);
+        assert_eq!(c.p76_perms_sum_highest(5, 1), 1); // 1+1+1+1+1
+        assert_eq!(c.p76_perms_sum_highest(5, 2), 3); // 2+(2+1), 2+(1+1+1+1), 1+1+1+1+1 => 3H2 + xH1 => 3H4 + 5H1 => (5-2)H2 + xH1
+        assert_eq!(c.p76_perms_sum_highest(5, 3), 5); // 3+(2), 3+(1+1), 2+(2+1), 2+(1+1+1+1), 1+(1+1+1+1) => (5-3)H2 + 5H2 => 2H2 + 3H2 + xH1 => 2H2 + 5H2 => 2H3 + 5H2
+        assert_eq!(c.p76_perms_sum_highest(5, 4), 6); // 4+1 + (5H3) => 1H1 + 5H3 => 1H2 + 5H3 => (5-4)H1 + 5H3
+        assert_eq!(c.p76_perms_sum_highest(5, 5), 7); // 5+0 + (5H4) => 0H0 + 5H4 => 0H1 + 5H4
+        assert_eq!(c.p76_perms_sum_highest(5, 6), 7); // (5H5)
+
+        assert_eq!(c.p76_perms_sum_highest(6, 0), 1);
+        assert_eq!(c.p76_perms_sum_highest(6, 1), 1);
+        assert_eq!(c.p76_perms_sum_highest(6, 2), 4);
+        assert_eq!(c.p76_perms_sum_highest(6, 3), 7);
+        assert_eq!(c.p76_perms_sum_highest(6, 4), 9);
+        assert_eq!(c.p76_perms_sum_highest(6, 5), 10);
+        assert_eq!(c.p76_perms_sum_highest(6, 6), 11);
+        assert_eq!(c.p76_perms_sum_highest(6, 7), 11);
     }
 }

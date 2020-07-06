@@ -8,4 +8,5 @@ fn main() {
     println!("Problem 5: {}", p5());
     println!("Problem 6: {}", p6());
     println!("Problem 7: {}", p7());
+    println!("Problem 76: {}", p76());
 }
