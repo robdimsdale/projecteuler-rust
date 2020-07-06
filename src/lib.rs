@@ -30,7 +30,7 @@ pub fn p3() -> i32 {
 
     while current_prime < current_number {
         if current_number % current_prime == 0 {
-            current_number = current_number / current_prime;
+            current_number /= current_prime;
         } else {
             current_prime = match PRIMES.next_prime(current_prime) {
                 None => panic!("no more primes"),
@@ -99,7 +99,7 @@ fn is_palindrome(val: i32) -> bool {
 }
 
 pub fn p76() -> i32 {
-    p76_cache::new().p76_perms_sum_highest(101, 101) - 1
+    P76Cache::new().p76_perms_sum_highest(101, 101) - 1
 }
 
 struct PrimeCache {
@@ -148,13 +148,49 @@ impl PrimeCache {
     }
 }
 
-struct p76_cache {
+pub struct PascalTriangle {
+    rows: Vec<Vec<i64>>,
+}
+
+impl PascalTriangle {
+    pub fn build(row_count: usize) -> PascalTriangle {
+        assert!(row_count > 0);
+
+        let mut pt = PascalTriangle { rows: vec![] };
+
+        pt.rows.push([1].to_vec());
+
+        for i in 1..row_count {
+            let mut row = Vec::with_capacity(i + 1);
+            row.push(1);
+
+            let prev_row = &pt.rows[i - 1];
+            for j in 1..i {
+                let a = prev_row[j - 1];
+                let b = prev_row[j];
+                row.push(a + b);
+            }
+
+            row.push(1);
+
+            pt.rows.push(row);
+        }
+
+        pt
+    }
+
+    pub fn row(&self, index: usize) -> Option<Vec<i64>> {
+        Some((*self.rows.get(index)?).clone())
+    }
+}
+
+struct P76Cache {
     cache: HashMap<(i32, i32), i32>,
 }
 
-impl p76_cache {
-    fn new() -> p76_cache {
-        p76_cache {
+impl P76Cache {
+    fn new() -> P76Cache {
+        P76Cache {
             cache: HashMap::new(),
         }
     }
@@ -233,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_p76_perms() {
-        let mut c = p76_cache::new();
+        let mut c = P76Cache::new();
 
         assert_eq!(c.p76_perms_sum_highest(0, 0), 1);
         assert_eq!(c.p76_perms_sum_highest(0, 1), 1);
